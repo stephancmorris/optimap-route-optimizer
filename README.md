@@ -1,4 +1,4 @@
-# 🗺️ OptiMap: Last-Mile Route Optimization AI
+# 🗺️ OptiMap: Last-Mile Route Optimization
 
 **A high-performance, full-stack platform built to minimize time and distance in last-mile logistics by solving the Vehicle Routing Problem (VRP).**
 
