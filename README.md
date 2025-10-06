@@ -31,7 +31,6 @@ graph TD
     A[React Frontend] -->|1. POST /optimize| B(FastAPI Backend);
     B -->|2. Request Distances| C(External Routing API);
     C -->|3. Return Distance Matrix| B;
-    B -->|4. Run OR-Tools (VRP Solver)| B;
+    B -->|4. Run OR-Tools VRP Solver| B;
     B -->|5. Return Optimal Route JSON| A;
     A -- Visualize Route & Metrics --> D[User (Logistics Manager)];
-```
