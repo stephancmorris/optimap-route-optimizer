@@ -33,4 +33,4 @@ graph TD
     C -->|3. Return Distance Matrix| B;
     B -->|4. Run OR-Tools VRP Solver| B;
     B -->|5. Return Optimal Route JSON| A;
-    A -- Visualize Route & Metrics --> D[User (Logistics Manager)];
+    A -- Visualize Route and Metrics --> D[Logistics Manager User];
