@@ -34,3 +34,4 @@ graph TD
     B -->|4. Run OR-Tools (VRP Solver)| B;
     B -->|5. Return Optimal Route JSON| A;
     A -- Visualize Route & Metrics --> D[User (Logistics Manager)];
+```
