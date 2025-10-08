@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.settings import settings
-from app.routers import health
+from app.routers import health, optimize
 
 app = FastAPI(
     title="OptiMap Route Optimizer",
@@ -21,6 +21,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health.router, tags=["Health"])
+app.include_router(optimize.router, tags=["Optimization"])
 
 
 @app.get("/")
