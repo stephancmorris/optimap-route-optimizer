@@ -1,35 +1,104 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import StopInput from './components/StopInput';
+import StopList from './components/StopList';
+import { optimizeRoute } from './services/api';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [stops, setStops] = useState([]);
+  const [optimizationResult, setOptimizationResult] = useState(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleAddStop = (stop) => {
+    setStops([...stops, stop]);
+    setError(null);
+  };
+
+  const handleRemoveStop = (index) => {
+    setStops(stops.filter((_, i) => i !== index));
+    setOptimizationResult(null);
+    setError(null);
+  };
+
+  const handleOptimize = async () => {
+    setIsOptimizing(true);
+    setError(null);
+
+    try {
+      const result = await optimizeRoute(stops, 0);
+      setOptimizationResult(result);
+    } catch (err) {
+      setError(err.message || 'Failed to optimize route');
+      console.error('Optimization error:', err);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app">
+      <header className="app-header">
+        <h1>🗺️ OptiMap</h1>
+        <p>Last-Mile Route Optimization</p>
+      </header>
+
+      <main className="app-main">
+        <div className="sidebar">
+          <StopInput onAddStop={handleAddStop} />
+          <StopList
+            stops={stops}
+            onRemoveStop={handleRemoveStop}
+            onOptimize={handleOptimize}
+            isOptimizing={isOptimizing}
+          />
+
+          {error && (
+            <div className="error-banner">
+              <strong>Error:</strong> {error}
+            </div>
+          )}
+
+          {optimizationResult && (
+            <div className="results">
+              <h3>Optimization Results</h3>
+              <div className="metric">
+                <span className="label">Distance Saved:</span>
+                <span className="value">
+                  {(optimizationResult.distance_saved_meters / 1000).toFixed(2)} km (
+                  {optimizationResult.distance_saved_percentage.toFixed(1)}%)
+                </span>
+              </div>
+              <div className="metric">
+                <span className="label">Time Saved:</span>
+                <span className="value">
+                  {(optimizationResult.time_saved_seconds / 60).toFixed(1)} min (
+                  {optimizationResult.time_saved_percentage.toFixed(1)}%)
+                </span>
+              </div>
+              <div className="metric-detail">
+                <div>
+                  <strong>Optimized:</strong> {(optimizationResult.optimized_metrics.total_distance_meters / 1000).toFixed(2)} km,{' '}
+                  {(optimizationResult.optimized_metrics.total_time_seconds / 60).toFixed(1)} min
+                </div>
+                <div>
+                  <strong>Baseline:</strong> {(optimizationResult.baseline_metrics.total_distance_meters / 1000).toFixed(2)} km,{' '}
+                  {(optimizationResult.baseline_metrics.total_time_seconds / 60).toFixed(1)} min
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="map-container">
+          <div className="map-placeholder">
+            <p>Map visualization will appear here</p>
+            <p className="help-text">Add stops and optimize to see the route</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
