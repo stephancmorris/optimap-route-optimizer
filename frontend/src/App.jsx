@@ -2,6 +2,7 @@ import { useState } from 'react';
 import StopInput from './components/StopInput';
 import StopList from './components/StopList';
 import RouteMap from './components/RouteMap';
+import MetricsDisplay from './components/MetricsDisplay';
 import { optimizeRoute } from './services/api';
 import './App.css';
 
@@ -60,35 +61,7 @@ function App() {
             </div>
           )}
 
-          {optimizationResult && (
-            <div className="results">
-              <h3>Optimization Results</h3>
-              <div className="metric">
-                <span className="label">Distance Saved:</span>
-                <span className="value">
-                  {(optimizationResult.distance_saved_meters / 1000).toFixed(2)} km (
-                  {optimizationResult.distance_saved_percentage.toFixed(1)}%)
-                </span>
-              </div>
-              <div className="metric">
-                <span className="label">Time Saved:</span>
-                <span className="value">
-                  {(optimizationResult.time_saved_seconds / 60).toFixed(1)} min (
-                  {optimizationResult.time_saved_percentage.toFixed(1)}%)
-                </span>
-              </div>
-              <div className="metric-detail">
-                <div>
-                  <strong>Optimized:</strong> {(optimizationResult.optimized_metrics.total_distance_meters / 1000).toFixed(2)} km,{' '}
-                  {(optimizationResult.optimized_metrics.total_time_seconds / 60).toFixed(1)} min
-                </div>
-                <div>
-                  <strong>Baseline:</strong> {(optimizationResult.baseline_metrics.total_distance_meters / 1000).toFixed(2)} km,{' '}
-                  {(optimizationResult.baseline_metrics.total_time_seconds / 60).toFixed(1)} min
-                </div>
-              </div>
-            </div>
-          )}
+          <MetricsDisplay optimizationResult={optimizationResult} />
         </div>
 
         <div className="map-container">

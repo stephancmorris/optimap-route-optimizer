@@ -1,0 +1,157 @@
+.metrics-display {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metrics-display h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 18px;
+  text-align: center;
+}
+
+.savings-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.savings-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f6f9fc 0%, #ffffff 100%);
+  border: 2px solid #e0e7ff;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.savings-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.savings-card.distance {
+  border-color: #e0f2fe;
+}
+
+.savings-card.time {
+  border-color: #fef3c7;
+}
+
+.savings-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.savings-content {
+  flex: 1;
+}
+
+.savings-label {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.savings-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #27ae60;
+  margin-bottom: 2px;
+}
+
+.savings-percentage {
+  font-size: 13px;
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.metrics-comparison {
+  padding-top: 16px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.metrics-comparison h4 {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.comparison-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.comparison-row.optimized {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%);
+  border: 1px solid #c8e6c9;
+}
+
+.comparison-row.baseline {
+  background: linear-gradient(135deg, #fff3e0 0%, #fef5e7 100%);
+  border: 1px solid #ffe0b2;
+}
+
+.route-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.optimized-badge {
+  background: #27ae60;
+  color: white;
+}
+
+.baseline-badge {
+  background: #f39c12;
+  color: white;
+}
+
+.route-metrics {
+  display: flex;
+  gap: 16px;
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+}
+
+.metric-icon {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .savings-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .route-metrics {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+}

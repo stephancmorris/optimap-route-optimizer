@@ -53,6 +53,15 @@ export default function RouteMap({ stops, optimizedRoute }) {
   const defaultCenter = [37.7749, -122.4194];
   const defaultZoom = 10;
 
+  // Force map to refresh size when container changes
+  useEffect(() => {
+    if (mapRef.current) {
+      setTimeout(() => {
+        mapRef.current.invalidateSize();
+      }, 100);
+    }
+  }, [stops, optimizedRoute]);
+
   // Determine which stops to display
   const displayStops = optimizedRoute || stops || [];
 
@@ -75,10 +84,16 @@ export default function RouteMap({ stops, optimizedRoute }) {
         zoom={defaultZoom}
         style={{ height: '100%', width: '100%' }}
         ref={mapRef}
+        whenReady={(map) => {
+          setTimeout(() => {
+            map.target.invalidateSize();
+          }, 100);
+        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
         />
 
         {/* Render stops as markers */}
