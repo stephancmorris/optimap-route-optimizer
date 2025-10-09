@@ -35,3 +35,63 @@ graph TD
     B -->|5. Return Optimal Route JSON| A;
     A -- Visualize Route and Metrics --> D[Logistics Manager User];
 ```
+
+## 🚀 Quick Start
+
+### One-Command Development Setup
+
+Run both backend and frontend with a single command:
+
+```bash
+./dev.sh
+```
+
+This script will:
+- ✅ Create virtual environment (if needed)
+- ✅ Install all dependencies (backend + frontend)
+- ✅ Start both servers concurrently
+- ✅ Handle graceful shutdown with Ctrl+C
+
+**Access the application:**
+- 🌐 Frontend: http://localhost:5173
+- 📡 Backend API: http://localhost:8000
+- 📚 API Docs: http://localhost:8000/docs
+
+### Manual Setup
+
+<details>
+<summary>Click to expand manual setup instructions</summary>
+
+#### Backend Setup
+```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run backend
+cd backend
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+#### Frontend Setup
+```bash
+# Install dependencies
+cd frontend
+npm install
+
+# Configure environment
+cp .env.example .env
+
+# Run frontend
+npm run dev
+```
+</details>
+
+## 📋 Prerequisites
+
+- **Python 3.8+** (tested with 3.13.2)
+- **Node.js 18+** (tested with 22.15.0)
+- **npm 10+**
