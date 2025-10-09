@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import StopInput from './components/StopInput';
 import StopList from './components/StopList';
+import RouteMap from './components/RouteMap';
 import { optimizeRoute } from './services/api';
 import './App.css';
 
@@ -91,10 +92,10 @@ function App() {
         </div>
 
         <div className="map-container">
-          <div className="map-placeholder">
-            <p>Map visualization will appear here</p>
-            <p className="help-text">Add stops and optimize to see the route</p>
-          </div>
+          <RouteMap
+            stops={stops}
+            optimizedRoute={optimizationResult?.optimized_route}
+          />
         </div>
       </main>
     </div>
