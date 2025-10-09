@@ -1,0 +1,154 @@
+.stop-list {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stop-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stop-list-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.help-text {
+  font-size: 13px;
+  color: #27ae60;
+  font-weight: 500;
+}
+
+.help-text.warning {
+  color: #f39c12;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.empty-state p {
+  margin: 8px 0;
+}
+
+.empty-state .help-text {
+  color: #999;
+  font-size: 14px;
+}
+
+.stops {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.stop-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: #fafafa;
+  transition: background-color 0.2s;
+}
+
+.stop-item:hover {
+  background: #f0f0f0;
+}
+
+.stop-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.stop-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #3498db;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 12px;
+  font-size: 14px;
+}
+
+.stop-details {
+  flex: 1;
+}
+
+.stop-address {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.stop-coords {
+  font-size: 13px;
+  color: #777;
+  font-family: 'Courier New', monospace;
+}
+
+.btn-remove {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #e74c3c;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.btn-remove:hover:not(:disabled) {
+  background: #c0392b;
+}
+
+.btn-remove:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-optimize {
+  width: 100%;
+  padding: 14px;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-optimize:hover:not(:disabled) {
+  background-color: #229954;
+}
+
+.btn-optimize:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.btn-optimize:active:not(:disabled) {
+  transform: translateY(1px);
+}
