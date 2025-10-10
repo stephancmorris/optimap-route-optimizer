@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     # OSRM API Configuration
     osrm_base_url: str = "http://router.project-osrm.org"
+    osrm_timeout_seconds: int = 30
 
     # OR-Tools Solver Configuration
     solver_time_limit_seconds: int = 30
