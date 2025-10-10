@@ -12,12 +12,21 @@ from app.models.route import (
     RouteMetrics,
     Location
 )
-from app.services.osrm_client import OSRMClient, OSRMClientError
+from app.models.errors import (
+    ErrorResponse,
+    ErrorCode,
+    ErrorDetail,
+    create_error_response
+)
+from app.services.osrm_client import OSRMClient, OSRMClientError, OSRMTimeoutError
 from app.services.vrp_solver import ORToolsVRPSolver
 from app.config.settings import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Constants
+MAX_STOPS = 100  # Maximum number of stops allowed
 
 
 @router.post(
@@ -50,24 +59,106 @@ async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
         HTTPException 503: Service temporarily unavailable (OSRM timeout)
     """
     try:
-        # Validate depot index
-        if request.depot_index >= len(request.stops):
+        # Validate number of stops
+        if len(request.stops) > MAX_STOPS:
+            error = create_error_response(
+                code=ErrorCode.TOO_MANY_STOPS,
+                message=f"Too many stops: {len(request.stops)} provided, maximum is {MAX_STOPS}",
+                details=[ErrorDetail(
+                    field="stops",
+                    message=f"Received {len(request.stops)} stops, but maximum allowed is {MAX_STOPS}",
+                    value=len(request.stops)
+                )]
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Depot index {request.depot_index} is out of bounds for {len(request.stops)} stops"
+                detail=error.model_dump()
             )
+
+        # Validate depot index
+        if request.depot_index >= len(request.stops):
+            error = create_error_response(
+                code=ErrorCode.INVALID_DEPOT_INDEX,
+                message=f"Depot index {request.depot_index} is out of bounds for {len(request.stops)} stops",
+                details=[ErrorDetail(
+                    field="depot_index",
+                    message=f"Index {request.depot_index} is invalid for {len(request.stops)} stops (valid range: 0-{len(request.stops)-1})",
+                    value=request.depot_index
+                )]
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error.model_dump()
+            )
+
+        # Validate coordinates
+        for i, stop in enumerate(request.stops):
+            if not (-90 <= stop.latitude <= 90):
+                error = create_error_response(
+                    code=ErrorCode.INVALID_COORDINATES,
+                    message=f"Invalid latitude at stop {i}: {stop.latitude}",
+                    details=[ErrorDetail(
+                        field=f"stops[{i}].latitude",
+                        message=f"Latitude must be between -90 and 90",
+                        value=stop.latitude
+                    )]
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error.model_dump()
+                )
+            if not (-180 <= stop.longitude <= 180):
+                error = create_error_response(
+                    code=ErrorCode.INVALID_COORDINATES,
+                    message=f"Invalid longitude at stop {i}: {stop.longitude}",
+                    details=[ErrorDetail(
+                        field=f"stops[{i}].longitude",
+                        message=f"Longitude must be between -180 and 180",
+                        value=stop.longitude
+                    )]
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error.model_dump()
+                )
 
         logger.info(f"Optimizing route for {len(request.stops)} stops with depot at index {request.depot_index}")
 
         # Step 1: Get distance matrix from OSRM
-        async with OSRMClient(base_url=settings.osrm_base_url) as osrm_client:
+        async with OSRMClient(
+            base_url=settings.osrm_base_url,
+            timeout_seconds=settings.osrm_timeout_seconds
+        ) as osrm_client:
             try:
                 distances, durations = await osrm_client.get_distance_matrix(request.stops)
-            except OSRMClientError as e:
-                logger.error(f"OSRM API error: {e}")
+            except OSRMTimeoutError as e:
+                logger.error(f"OSRM API timeout: {e}")
+                error = create_error_response(
+                    code=ErrorCode.ROUTING_SERVICE_TIMEOUT,
+                    message=f"Routing service request timed out after {settings.osrm_timeout_seconds}s",
+                    details=[ErrorDetail(
+                        field="osrm_timeout",
+                        message=str(e),
+                        value=settings.osrm_timeout_seconds
+                    )]
+                )
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail=f"Routing service unavailable: {str(e)}"
+                    detail=error.model_dump()
+                )
+            except OSRMClientError as e:
+                logger.error(f"OSRM API error: {e}")
+                error = create_error_response(
+                    code=ErrorCode.ROUTING_SERVICE_ERROR,
+                    message="Unable to calculate route distances",
+                    details=[ErrorDetail(
+                        field="routing_service",
+                        message=str(e)
+                    )]
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=error.model_dump()
                 )
 
         # Step 2: Solve VRP using OR-Tools
@@ -81,18 +172,38 @@ async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
             )
 
             if result is None:
+                logger.warning(f"Solver could not find solution within {settings.solver_time_limit_seconds}s timeout")
+                error = create_error_response(
+                    code=ErrorCode.SOLVER_NO_SOLUTION,
+                    message="Unable to find optimal route within time limit",
+                    details=[ErrorDetail(
+                        field="solver_timeout",
+                        message=f"Solver timed out after {settings.solver_time_limit_seconds} seconds",
+                        value=settings.solver_time_limit_seconds
+                    )]
+                )
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to find optimal route solution"
+                    detail=error.model_dump()
                 )
 
             optimized_route_indices, optimized_distance = result
 
+        except HTTPException:
+            raise
         except Exception as e:
-            logger.error(f"VRP solver error: {e}")
+            logger.error(f"VRP solver error: {e}", exc_info=True)
+            error = create_error_response(
+                code=ErrorCode.SOLVER_FAILED,
+                message="Optimization solver encountered an unexpected error",
+                details=[ErrorDetail(
+                    field="solver",
+                    message=str(e)
+                )]
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Optimization failed: {str(e)}"
+                detail=error.model_dump()
             )
 
         # Step 3: Calculate optimized route metrics
@@ -137,9 +248,16 @@ async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
         raise
     except Exception as e:
         logger.exception(f"Unexpected error during optimization: {e}")
+        error = create_error_response(
+            code=ErrorCode.INTERNAL_ERROR,
+            message="An unexpected error occurred while processing your request",
+            details=[ErrorDetail(
+                message="Please try again. If the problem persists, contact support"
+            )]
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred during optimization"
+            detail=error.model_dump()
         )
 
 
