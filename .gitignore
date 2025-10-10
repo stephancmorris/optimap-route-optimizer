@@ -55,3 +55,10 @@ yarn-error.log*
 # Frontend build
 frontend/build/
 frontend/dist/
+
+# Editor swap files
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
