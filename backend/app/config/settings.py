@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     solver_time_limit_seconds: int = 30
 
     # CORS Configuration
+    # Comma-separated list of allowed origins for cross-origin requests
+    # Example: "http://localhost:3000,http://localhost:5173,https://yourdomain.com"
+    # For development: Use localhost with your frontend port
+    # For production: Use your actual domain(s) - NEVER use "*" in production
     allowed_origins: str = "http://localhost:3000,http://localhost:5173"
 
     # Logging
