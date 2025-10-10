@@ -38,7 +38,34 @@ graph TD
 
 ## 🚀 Quick Start
 
-### One-Command Development Setup
+### 🐳 Docker (Recommended)
+
+The easiest way to run OptiMap is using Docker:
+
+```bash
+# Start both services in production mode
+./docker.sh up
+
+# Or start in development mode with hot-reload
+./docker.sh dev
+```
+
+**Access the application:**
+- 🌐 Frontend: http://localhost:3000
+- 📡 Backend API: http://localhost:8000
+- 📚 API Docs: http://localhost:8000/docs
+
+**Other Docker commands:**
+```bash
+./docker.sh build          # Build Docker images
+./docker.sh logs           # View logs
+./docker.sh down           # Stop services
+./docker.sh health         # Check service health
+```
+
+📖 **See [DOCKER.md](DOCKER.md) for detailed Docker deployment guide**
+
+### One-Command Development Setup (Without Docker)
 
 Run both backend and frontend with a single command:
 
@@ -92,6 +119,11 @@ npm run dev
 
 ## 📋 Prerequisites
 
+### For Docker Deployment
+- **Docker** 20.10+ ([Install Docker](https://docs.docker.com/get-docker/))
+- **Docker Compose** 2.0+ (included with Docker Desktop)
+
+### For Local Development
 - **Python 3.8+** (tested with 3.13.2)
 - **Node.js 18+** (tested with 22.15.0)
 - **npm 10+**
