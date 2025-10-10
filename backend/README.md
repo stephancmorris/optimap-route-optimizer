@@ -146,8 +146,25 @@ See [.env.example](../.env.example) for full configuration options:
 | `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:3000,http://localhost:5173` |
 | `LOG_LEVEL` | Logging level | `INFO` |
 
+## 🔐 CORS Configuration
+
+Cross-Origin Resource Sharing (CORS) is configured to allow the frontend to communicate with the backend.
+
+**Quick reference:**
+- Configure allowed origins via `ALLOWED_ORIGINS` environment variable
+- Default: `http://localhost:3000,http://localhost:5173`
+- Production: Set to your actual domain(s), never use `"*"`
+
+**Test CORS:**
+```bash
+./test_cors.sh
+```
+
+📖 **See [CORS.md](CORS.md) for detailed CORS configuration guide**
+
 ## 📚 Additional Resources
 
 - [Google OR-Tools Documentation](https://developers.google.com/optimization)
 - [FastAPI Documentation](https://fastapi.tiangolo.com)
 - [Vehicle Routing Problem Guide](https://developers.google.com/optimization/routing)
+- [CORS Configuration Guide](CORS.md)

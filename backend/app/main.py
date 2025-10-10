@@ -12,12 +12,14 @@ app = FastAPI(
 
 # Configure CORS - MUST be before routes
 # Allow frontend to communicate with backend
+# Origins are configured via ALLOWED_ORIGINS environment variable
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=settings.origins_list,  # Specific origins from config
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],  # Explicit methods for security
+    allow_headers=["Content-Type", "Authorization"],  # Explicit headers
+    max_age=600,  # Cache preflight requests for 10 minutes
 )
 
 # Include routers
