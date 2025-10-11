@@ -11,7 +11,7 @@ Cross-Origin Resource Sharing (CORS) is configured to allow the React frontend t
 The backend accepts requests from origins specified in the `ALLOWED_ORIGINS` environment variable:
 
 **Default (Development):**
-- `http://localhost:3000` - Production build served by nginx/Docker
+- `http://localhost:8000` - Production build served by nginx/Docker 
 - `http://localhost:5173` - Vite development server
 
 **Configuration Location:**
