@@ -21,6 +21,15 @@ class Location(BaseModel):
             raise ValueError('Coordinates must be numeric values')
         return v
 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "latitude": 40.7128,
+                "longitude": -74.0060,
+                "address": "New York, NY"
+            }
+        }
+
 
 class OptimizationRequest(BaseModel):
     """Request payload for route optimization."""
@@ -45,12 +54,33 @@ class OptimizationRequest(BaseModel):
             raise ValueError('Depot index must be non-negative')
         return v
 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "stops": [
+                    {"latitude": 40.7128, "longitude": -74.0060, "address": "New York, NY"},
+                    {"latitude": 40.7589, "longitude": -73.9851, "address": "Times Square, NY"},
+                    {"latitude": 40.7614, "longitude": -73.9776, "address": "Central Park, NY"},
+                    {"latitude": 40.7484, "longitude": -73.9857, "address": "Empire State Building, NY"}
+                ],
+                "depot_index": 0
+            }
+        }
+
 
 class RouteMetrics(BaseModel):
     """Metrics for a calculated route."""
 
     total_distance_meters: float = Field(..., description="Total route distance in meters")
     total_time_seconds: float = Field(..., description="Total route time in seconds")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "total_distance_meters": 8420.5,
+                "total_time_seconds": 1245.8
+            }
+        }
 
 
 class OptimizationResponse(BaseModel):
@@ -84,6 +114,31 @@ class OptimizationResponse(BaseModel):
         ...,
         description="Percentage of time saved"
     )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "optimized_route": [
+                    {"latitude": 40.7128, "longitude": -74.0060, "address": "New York, NY"},
+                    {"latitude": 40.7484, "longitude": -73.9857, "address": "Empire State Building, NY"},
+                    {"latitude": 40.7589, "longitude": -73.9851, "address": "Times Square, NY"},
+                    {"latitude": 40.7614, "longitude": -73.9776, "address": "Central Park, NY"},
+                    {"latitude": 40.7128, "longitude": -74.0060, "address": "New York, NY"}
+                ],
+                "optimized_metrics": {
+                    "total_distance_meters": 8420.5,
+                    "total_time_seconds": 1245.8
+                },
+                "baseline_metrics": {
+                    "total_distance_meters": 10850.2,
+                    "total_time_seconds": 1580.4
+                },
+                "distance_saved_meters": 2429.7,
+                "time_saved_seconds": 334.6,
+                "distance_saved_percentage": 22.4,
+                "time_saved_percentage": 21.2
+            }
+        }
 
 
 class DistanceMatrixResponse(BaseModel):
