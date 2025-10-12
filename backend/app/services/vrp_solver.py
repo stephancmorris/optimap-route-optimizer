@@ -5,9 +5,13 @@ This module provides utilities for solving the Traveling Salesman Problem (TSP)
 and Vehicle Routing Problem (VRP) using Google's OR-Tools optimization library.
 """
 
+import logging
+import time
 from typing import List, Tuple, Optional
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
+
+logger = logging.getLogger(__name__)
 
 
 class ORToolsVRPSolver:
@@ -68,10 +72,18 @@ class ORToolsVRPSolver:
         Returns:
             Tuple of (route_indices, total_distance) or None if no solution found
         """
+        num_locations = len(distance_matrix)
+        logger.info(f"Starting VRP solver: {num_locations} locations, "
+                   f"{num_vehicles} vehicle(s), depot={depot}, "
+                   f"time_limit={self.time_limit_seconds}s")
+
+        start_time = time.time()
+
         # Create data model
         data = self.create_data_model(distance_matrix, num_vehicles, depot)
 
         # Create the routing index manager
+        logger.debug(f"Creating routing index manager for {num_locations} locations")
         manager = pywrapcp.RoutingIndexManager(
             len(data['distance_matrix']),
             data['num_vehicles'],
@@ -79,6 +91,7 @@ class ORToolsVRPSolver:
         )
 
         # Create routing model
+        logger.debug("Initializing routing model")
         routing = pywrapcp.RoutingModel(manager)
 
         # Create distance callback
@@ -100,12 +113,26 @@ class ORToolsVRPSolver:
         )
         search_parameters.time_limit.seconds = self.time_limit_seconds
 
+        logger.debug(f"Starting solver with strategy: PATH_CHEAPEST_ARC")
+
         # Solve the problem
         solution = routing.SolveWithParameters(search_parameters)
 
+        solve_time = time.time() - start_time
+
         if solution:
-            return self._extract_solution(manager, routing, solution)
+            route, total_distance = self._extract_solution(manager, routing, solution)
+            logger.info(
+                f"VRP solver completed successfully: route_length={len(route)}, "
+                f"total_distance={total_distance}m, solve_time={solve_time:.2f}s"
+            )
+            return route, total_distance
         else:
+            logger.warning(
+                f"VRP solver failed to find solution: "
+                f"locations={num_locations}, time_elapsed={solve_time:.2f}s, "
+                f"time_limit={self.time_limit_seconds}s"
+            )
             return None
 
     def _extract_solution(

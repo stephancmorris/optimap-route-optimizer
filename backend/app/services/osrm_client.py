@@ -109,27 +109,49 @@ class OSRMClient:
         if not self._client:
             self._client = httpx.AsyncClient(timeout=self.timeout_seconds)
 
+        import time
+        start_time = time.time()
+
         try:
             logger.info(f"Requesting OSRM API: {url}")
             response = await self._client.get(url)
             response.raise_for_status()
             data = response.json()
 
+            request_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+
             if data.get("code") != "Ok":
                 error_message = data.get("message", "Unknown OSRM API error")
-                logger.error(f"OSRM API error: {error_message}")
+                logger.error(
+                    f"OSRM API error: {error_message} (response_time={request_time:.0f}ms)"
+                )
                 raise OSRMAPIError(f"OSRM API error: {error_message}")
+
+            logger.info(
+                f"OSRM API request successful: "
+                f"status={response.status_code}, response_time={request_time:.0f}ms"
+            )
 
             return data
 
         except httpx.TimeoutException as e:
-            logger.error(f"OSRM API timeout: {e}")
+            request_time = (time.time() - start_time) * 1000
+            logger.error(
+                f"OSRM API timeout after {request_time:.0f}ms: {e}"
+            )
             raise OSRMTimeoutError(f"Request timed out after {self.timeout_seconds}s")
         except httpx.HTTPStatusError as e:
-            logger.error(f"OSRM HTTP error: {e}")
+            request_time = (time.time() - start_time) * 1000
+            logger.error(
+                f"OSRM HTTP error: status={e.response.status_code}, "
+                f"response_time={request_time:.0f}ms"
+            )
             raise OSRMAPIError(f"HTTP error: {e.response.status_code}")
         except httpx.NetworkError as e:
-            logger.error(f"OSRM network error: {e}")
+            request_time = (time.time() - start_time) * 1000
+            logger.error(
+                f"OSRM network error after {request_time:.0f}ms: {str(e)}"
+            )
             raise OSRMAPIError(f"Network error: {str(e)}")
 
     async def get_distance_matrix(
@@ -157,6 +179,12 @@ class OSRMClient:
         if not locations or len(locations) < 2:
             raise ValueError("At least 2 locations required for distance matrix")
 
+        import time
+        start_time = time.time()
+        n = len(locations)
+
+        logger.info(f"Calculating distance matrix for {n} locations via OSRM")
+
         # Format coordinates for OSRM
         coords_string = self._format_coordinates(locations)
 
@@ -178,16 +206,17 @@ class OSRMClient:
             raise OSRMAPIError("Invalid response: missing distance or duration data")
 
         # Validate matrix dimensions
-        n = len(locations)
         if len(distances) != n or len(durations) != n:
             raise OSRMAPIError(
                 f"Matrix dimension mismatch: expected {n}x{n}, "
                 f"got {len(distances)}x{len(durations)}"
             )
 
+        total_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+
         logger.info(
-            f"Successfully calculated {n}x{n} distance matrix "
-            f"for {len(locations)} locations"
+            f"Successfully calculated {n}x{n} distance matrix: "
+            f"total_time={total_time:.0f}ms"
         )
 
         return distances, durations

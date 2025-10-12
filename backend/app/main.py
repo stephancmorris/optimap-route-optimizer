@@ -1,8 +1,19 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.settings import settings
+from app.config.logging_config import setup_logging
+from app.middleware import LoggingMiddleware
 from app.routers import health, optimize
+
+# Configure logging before any other imports
+setup_logging(
+    log_level=settings.log_level,
+    use_json=settings.log_json_format,
+    log_file=settings.log_file
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="OptiMap Route Optimizer API",
@@ -55,6 +66,9 @@ For detailed error documentation, see the `/optimize` endpoint error responses.
     openapi_url="/openapi.json",
 )
 
+# Configure logging middleware (first for proper request tracking)
+app.add_middleware(LoggingMiddleware)
+
 # Configure CORS - MUST be before routes
 # Allow frontend to communicate with backend
 # Origins are configured via ALLOWED_ORIGINS environment variable
@@ -66,6 +80,10 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
     max_age=600,  # Cache preflight requests for 10 minutes
 )
+
+logger.info(f"OptiMap API starting with configuration: OSRM={settings.osrm_base_url}, "
+            f"Solver timeout={settings.solver_time_limit_seconds}s, "
+            f"Log level={settings.log_level}")
 
 # Include routers
 app.include_router(health.router, tags=["Health"])

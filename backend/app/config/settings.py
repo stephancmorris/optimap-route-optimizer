@@ -22,8 +22,10 @@ class Settings(BaseSettings):
     # For production: Use your actual domain(s) - NEVER use "*" in production
     allowed_origins: str = "http://localhost:3000,http://localhost:5173"
 
-    # Logging
-    log_level: str = "INFO"
+    # Logging Configuration
+    log_level: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    log_json_format: bool = False  # Use JSON structured logging
+    log_file: str | None = None  # Optional log file path
 
     model_config = SettingsConfigDict(
         env_file=".env",
