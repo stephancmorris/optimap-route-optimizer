@@ -34,7 +34,97 @@ MAX_STOPS = 100  # Maximum number of stops allowed
     response_model=OptimizationResponse,
     status_code=status.HTTP_200_OK,
     summary="Optimize delivery route",
-    description="Calculate the optimal route for a list of delivery stops using VRP optimization"
+    description="Calculate the optimal route for a list of delivery stops using VRP optimization",
+    responses={
+        200: {
+            "description": "Successful optimization with route and metrics",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "optimized_route": [
+                            {"latitude": 40.7128, "longitude": -74.0060, "address": "New York, NY"},
+                            {"latitude": 40.7484, "longitude": -73.9857, "address": "Empire State Building, NY"},
+                            {"latitude": 40.7589, "longitude": -73.9851, "address": "Times Square, NY"},
+                            {"latitude": 40.7614, "longitude": -73.9776, "address": "Central Park, NY"},
+                            {"latitude": 40.7128, "longitude": -74.0060, "address": "New York, NY"}
+                        ],
+                        "optimized_metrics": {
+                            "total_distance_meters": 8420.5,
+                            "total_time_seconds": 1245.8
+                        },
+                        "baseline_metrics": {
+                            "total_distance_meters": 10850.2,
+                            "total_time_seconds": 1580.4
+                        },
+                        "distance_saved_meters": 2429.7,
+                        "time_saved_seconds": 334.6,
+                        "distance_saved_percentage": 22.4,
+                        "time_saved_percentage": 21.2
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Bad Request - Invalid input data",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": True,
+                        "code": "INVALID_DEPOT_INDEX",
+                        "message": "Depot index 5 is out of bounds for 3 stops",
+                        "details": [
+                            {
+                                "field": "depot_index",
+                                "message": "Index 5 is invalid for 3 stops (valid range: 0-2)",
+                                "value": 5
+                            }
+                        ],
+                        "suggestion": "Ensure depot_index is between 0 and the number of stops minus 1"
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error - Solver failure",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": True,
+                        "code": "SOLVER_NO_SOLUTION",
+                        "message": "Unable to find optimal route within time limit",
+                        "details": [
+                            {
+                                "field": "solver_timeout",
+                                "message": "Solver timed out after 30 seconds",
+                                "value": 30
+                            }
+                        ],
+                        "suggestion": "Try reducing the number of stops or increasing the solver timeout"
+                    }
+                }
+            }
+        },
+        503: {
+            "description": "Service Unavailable - OSRM routing service error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": True,
+                        "code": "ROUTING_SERVICE_TIMEOUT",
+                        "message": "Routing service request timed out after 30s",
+                        "details": [
+                            {
+                                "field": "osrm_timeout",
+                                "message": "OSRM API request exceeded timeout limit",
+                                "value": 30
+                            }
+                        ],
+                        "suggestion": "Try again with fewer stops or check your network connection"
+                    }
+                }
+            }
+        }
+    }
 )
 async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
     """
