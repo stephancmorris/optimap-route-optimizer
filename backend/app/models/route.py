@@ -7,27 +7,80 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class Location(BaseModel):
-    """Represents a geographical location with coordinates."""
+    """Represents a geographical location with coordinates and/or address."""
 
-    latitude: float = Field(..., ge=-90, le=90, description="Latitude coordinate")
-    longitude: float = Field(..., ge=-180, le=180, description="Longitude coordinate")
-    address: Optional[str] = Field(None, description="Optional human-readable address")
+    latitude: Optional[float] = Field(None, ge=-90, le=90, description="Latitude coordinate")
+    longitude: Optional[float] = Field(None, ge=-180, le=180, description="Longitude coordinate")
+    address: Optional[str] = Field(None, description="Street address for geocoding")
+    original_address: Optional[str] = Field(None, description="Original address before normalization")
+    geocoded: bool = Field(False, description="Whether coordinates were auto-geocoded")
+    geocoding_confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="Geocoding confidence score")
 
     @field_validator('latitude', 'longitude')
     @classmethod
-    def validate_coordinates(cls, v: float) -> float:
-        """Ensure coordinates are valid numbers."""
-        if not isinstance(v, (int, float)):
+    def validate_coordinates(cls, v: Optional[float]) -> Optional[float]:
+        """Ensure coordinates are valid numbers if provided."""
+        if v is not None and not isinstance(v, (int, float)):
             raise ValueError('Coordinates must be numeric values')
         return v
 
+    def model_post_init(self, __context) -> None:
+        """Validate that either address or coordinates are provided."""
+        has_coords = self.latitude is not None and self.longitude is not None
+        has_address = self.address is not None and len(self.address.strip()) > 0 if self.address else False
+
+        if not has_coords and not has_address:
+            raise ValueError("Must provide either 'address' or both 'latitude' and 'longitude'")
+
+    def has_coordinates(self) -> bool:
+        """Check if location has coordinates."""
+        return self.latitude is not None and self.longitude is not None
+
+    def needs_geocoding(self) -> bool:
+        """Check if location needs geocoding."""
+        return not self.has_coordinates() and self.address is not None
+
+    def set_geocoded_coordinates(
+        self,
+        lat: float,
+        lng: float,
+        confidence: Optional[float] = None
+    ) -> None:
+        """
+        Set coordinates from geocoding result.
+
+        Args:
+            lat: Latitude coordinate
+            lng: Longitude coordinate
+            confidence: Geocoding confidence score (0.0-1.0)
+        """
+        self.latitude = lat
+        self.longitude = lng
+        self.geocoded = True
+        if not self.original_address and self.address:
+            self.original_address = self.address
+        if confidence is not None:
+            self.geocoding_confidence = confidence
+
     class Config:
         json_schema_extra = {
-            "example": {
-                "latitude": 40.7128,
-                "longitude": -74.0060,
-                "address": "New York, NY"
-            }
+            "examples": [
+                {
+                    "address": "1600 Amphitheatre Parkway, Mountain View, CA 94043",
+                    "description": "Address-based input (will be geocoded)"
+                },
+                {
+                    "latitude": 37.4224764,
+                    "longitude": -122.0842499,
+                    "address": "Google Headquarters",
+                    "description": "Coordinate-based input with optional address"
+                },
+                {
+                    "latitude": 40.7128,
+                    "longitude": -74.0060,
+                    "description": "Coordinate-only input (backward compatible)"
+                }
+            ]
         }
 
 
