@@ -2,7 +2,9 @@
 Route optimization API endpoints.
 """
 
+import asyncio
 import logging
+import time
 from typing import List
 from fastapi import APIRouter, HTTPException, status
 
@@ -20,6 +22,13 @@ from app.models.errors import (
 )
 from app.services.osrm_client import OSRMClient, OSRMClientError, OSRMTimeoutError
 from app.services.vrp_solver import ORToolsVRPSolver
+from app.services.geocoding_client import GeocodingClient
+from app.services.exceptions import (
+    GeocodingError,
+    GeocodingNotFoundError,
+    GeocodingTimeoutError,
+    GeocodingServiceError
+)
 from app.config.settings import settings
 
 router = APIRouter()
@@ -214,6 +223,84 @@ async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
 
         logger.info(f"Optimizing route for {len(request.stops)} stops with depot at index {request.depot_index}")
 
+        # Step 0: Geocode any addresses that don't have coordinates
+        locations_to_geocode = [
+            (i, stop) for i, stop in enumerate(request.stops)
+            if stop.needs_geocoding()
+        ]
+
+        if locations_to_geocode:
+            logger.info(f"Geocoding {len(locations_to_geocode)} addresses")
+            geocoding_start_time = time.time()
+
+            async with GeocodingClient() as geocoding_client:
+                # Geocode all addresses in parallel
+                geocoding_tasks = [
+                    _geocode_single_location(stop, geocoding_client)
+                    for _, stop in locations_to_geocode
+                ]
+
+                geocoding_results = await asyncio.gather(
+                    *geocoding_tasks,
+                    return_exceptions=True
+                )
+
+            geocoding_time = (time.time() - geocoding_start_time) * 1000
+
+            # Check for geocoding failures
+            failed_geocodes = []
+            for (idx, stop), result in zip(locations_to_geocode, geocoding_results):
+                if isinstance(result, Exception) or result is None:
+                    error_msg = str(result) if isinstance(result, Exception) else "Address not found"
+                    failed_geocodes.append({
+                        "index": idx,
+                        "address": stop.address,
+                        "error": error_msg
+                    })
+                    logger.warning(f"Failed to geocode stop {idx} (address: {stop.address}): {error_msg}")
+
+            if failed_geocodes:
+                # Return error with details about all failed geocoding attempts
+                error = create_error_response(
+                    code=ErrorCode.GEOCODING_FAILED,
+                    message=f"Failed to geocode {len(failed_geocodes)} address(es)",
+                    details=[
+                        ErrorDetail(
+                            field=f"stops[{f['index']}].address",
+                            message=f["error"],
+                            value=f["address"]
+                        )
+                        for f in failed_geocodes
+                    ],
+                    suggestion="Provide more specific addresses with street, city, state, and ZIP code, or use coordinates directly"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error.model_dump()
+                )
+
+            logger.info(
+                f"Geocoding completed successfully: {len(locations_to_geocode)} addresses, "
+                f"time={geocoding_time:.0f}ms"
+            )
+
+        # Validate all stops now have coordinates
+        for i, stop in enumerate(request.stops):
+            if not stop.has_coordinates():
+                error = create_error_response(
+                    code=ErrorCode.INVALID_INPUT,
+                    message=f"Stop {i} is missing coordinates after geocoding",
+                    details=[ErrorDetail(
+                        field=f"stops[{i}]",
+                        message="Location must have coordinates",
+                        value=stop.model_dump()
+                    )]
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error.model_dump()
+                )
+
         # Step 1: Get distance matrix from OSRM
         async with OSRMClient(
             base_url=settings.osrm_base_url,
@@ -387,3 +474,47 @@ def _calculate_route_duration(route_indices: List[int], duration_matrix: List[Li
         to_idx = route_indices[i + 1]
         total += duration_matrix[from_idx][to_idx]
     return total
+
+
+async def _geocode_single_location(
+    location: Location,
+    geocoding_client: GeocodingClient
+) -> tuple[float, float] | None:
+    """
+    Geocode a single location and update its coordinates.
+
+    Args:
+        location: Location to geocode
+        geocoding_client: Geocoding client instance
+
+    Returns:
+        Tuple of (latitude, longitude) or None if geocoding fails
+
+    Raises:
+        GeocodingError: If geocoding fails
+    """
+    try:
+        if not location.address:
+            raise GeocodingError("Location has no address to geocode")
+
+        # Geocode the address
+        lat, lng = await geocoding_client.geocode_address(location.address)
+
+        # Update location with geocoded coordinates
+        location.set_geocoded_coordinates(lat, lng, confidence=None)
+
+        logger.debug(f"Geocoded '{location.address}' → ({lat}, {lng})")
+        return lat, lng
+
+    except GeocodingNotFoundError as e:
+        logger.warning(f"Address not found: {location.address}")
+        raise
+    except GeocodingTimeoutError as e:
+        logger.error(f"Geocoding timeout for address: {location.address}")
+        raise
+    except GeocodingServiceError as e:
+        logger.error(f"Geocoding service error for address: {location.address} - {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected geocoding error for address: {location.address} - {e}", exc_info=True)
+        raise GeocodingServiceError(f"Unexpected error: {e}") from e

@@ -19,6 +19,12 @@ class ErrorCode(str, Enum):
     INSUFFICIENT_STOPS = "INSUFFICIENT_STOPS"
     TOO_MANY_STOPS = "TOO_MANY_STOPS"
 
+    # Geocoding errors (4xx)
+    GEOCODING_FAILED = "GEOCODING_FAILED"
+    GEOCODING_TIMEOUT = "GEOCODING_TIMEOUT"
+    GEOCODING_AMBIGUOUS = "GEOCODING_AMBIGUOUS"
+    GEOCODING_SERVICE_ERROR = "GEOCODING_SERVICE_ERROR"
+
     # Server errors (5xx)
     SOLVER_FAILED = "SOLVER_FAILED"
     SOLVER_TIMEOUT = "SOLVER_TIMEOUT"
@@ -73,6 +79,10 @@ ERROR_MESSAGES = {
     ErrorCode.INVALID_DEPOT_INDEX: "The specified depot index is out of bounds",
     ErrorCode.INSUFFICIENT_STOPS: "At least 2 stops are required for route optimization",
     ErrorCode.TOO_MANY_STOPS: "Too many stops provided - maximum limit exceeded",
+    ErrorCode.GEOCODING_FAILED: "Failed to geocode one or more addresses",
+    ErrorCode.GEOCODING_TIMEOUT: "Geocoding service request timed out",
+    ErrorCode.GEOCODING_AMBIGUOUS: "Geocoding returned ambiguous results",
+    ErrorCode.GEOCODING_SERVICE_ERROR: "Geocoding service encountered an error",
     ErrorCode.SOLVER_FAILED: "The optimization solver encountered an error",
     ErrorCode.SOLVER_TIMEOUT: "The optimization solver timed out before finding a solution",
     ErrorCode.SOLVER_NO_SOLUTION: "The optimization solver could not find a valid solution",
@@ -89,6 +99,10 @@ ERROR_SUGGESTIONS = {
     ErrorCode.INVALID_DEPOT_INDEX: "Ensure depot_index is between 0 and the number of stops minus 1",
     ErrorCode.INSUFFICIENT_STOPS: "Provide at least 2 stops in the 'stops' array",
     ErrorCode.TOO_MANY_STOPS: "Reduce the number of stops or contact support for enterprise limits",
+    ErrorCode.GEOCODING_FAILED: "Provide a more specific address with street, city, state, and ZIP code",
+    ErrorCode.GEOCODING_TIMEOUT: "Try again or provide coordinates directly instead of addresses",
+    ErrorCode.GEOCODING_AMBIGUOUS: "Provide a more specific address to get better results",
+    ErrorCode.GEOCODING_SERVICE_ERROR: "Try again later or provide coordinates directly",
     ErrorCode.SOLVER_TIMEOUT: "Try reducing the number of stops or increasing the solver timeout",
     ErrorCode.SOLVER_NO_SOLUTION: "Check that all stops are reachable by road and coordinates are valid",
     ErrorCode.ROUTING_SERVICE_UNAVAILABLE: "Try again in a few moments. If the issue persists, the routing service may be down",
