@@ -2,12 +2,26 @@ import { useState } from 'react';
 import './StopInput.css';
 
 export default function StopInput({ onAddStop }) {
+  const [inputMode, setInputMode] = useState('address'); // 'address' or 'coordinates'
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [address, setAddress] = useState('');
   const [errors, setErrors] = useState({});
 
-  const validateInputs = () => {
+  const validateAddressInput = () => {
+    const newErrors = {};
+
+    if (!address || address.trim() === '') {
+      newErrors.address = 'Address is required';
+    } else if (address.trim().length < 5) {
+      newErrors.address = 'Please provide a more specific address';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateCoordinateInput = () => {
     const newErrors = {};
 
     if (!latitude || latitude.trim() === '') {
@@ -35,15 +49,30 @@ export default function StopInput({ onAddStop }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!validateInputs()) {
-      return;
+    let isValid = false;
+    let stop = {};
+
+    if (inputMode === 'address') {
+      isValid = validateAddressInput();
+      if (isValid) {
+        stop = {
+          address: address.trim(),
+        };
+      }
+    } else {
+      isValid = validateCoordinateInput();
+      if (isValid) {
+        stop = {
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
+          address: address.trim() || undefined,
+        };
+      }
     }
 
-    const stop = {
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
-      address: address.trim() || undefined,
-    };
+    if (!isValid) {
+      return;
+    }
 
     onAddStop(stop);
 
@@ -54,52 +83,127 @@ export default function StopInput({ onAddStop }) {
     setErrors({});
   };
 
+  const switchMode = (mode) => {
+    setInputMode(mode);
+    setErrors({});
+  };
+
   return (
     <div className="stop-input">
-      <h3>Add Delivery Stop</h3>
+      <div className="stop-input-header">
+        <h3>📍 Add Delivery Stop</h3>
+        <div className="input-mode-toggle">
+          <button
+            type="button"
+            className={`mode-btn ${inputMode === 'address' ? 'active' : ''}`}
+            onClick={() => switchMode('address')}
+            title="Enter address"
+          >
+            <span className="mode-icon">🏠</span>
+            Address
+          </button>
+          <button
+            type="button"
+            className={`mode-btn ${inputMode === 'coordinates' ? 'active' : ''}`}
+            onClick={() => switchMode('coordinates')}
+            title="Enter coordinates"
+          >
+            <span className="mode-icon">🌐</span>
+            Coordinates
+          </button>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="latitude">
-            Latitude <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            id="latitude"
-            value={latitude}
-            onChange={(e) => setLatitude(e.target.value)}
-            placeholder="37.7749"
-            className={errors.latitude ? 'error' : ''}
-          />
-          {errors.latitude && <span className="error-message">{errors.latitude}</span>}
-        </div>
+        {inputMode === 'address' ? (
+          <div className="form-section">
+            <div className="form-group">
+              <label htmlFor="address">
+                <span className="label-text">Street Address</span>
+                <span className="required">*</span>
+              </label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="123 Main St, New York, NY 10001"
+                  className={errors.address ? 'error' : ''}
+                  autoComplete="street-address"
+                />
+              </div>
+              {errors.address && (
+                <span className="error-message">⚠️ {errors.address}</span>
+              )}
+            </div>
+            <div className="help-text">
+              💡 We'll automatically geocode your address!
+            </div>
+          </div>
+        ) : (
+          <div className="form-section">
+            <div className="coordinate-inputs">
+              <div className="form-group">
+                <label htmlFor="latitude">
+                  <span className="label-text">Latitude</span>
+                  <span className="required">*</span>
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    id="latitude"
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                    placeholder="40.7128"
+                    className={errors.latitude ? 'error' : ''}
+                  />
+                </div>
+                {errors.latitude && (
+                  <span className="error-message">⚠️ {errors.latitude}</span>
+                )}
+              </div>
 
-        <div className="form-group">
-          <label htmlFor="longitude">
-            Longitude <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            id="longitude"
-            value={longitude}
-            onChange={(e) => setLongitude(e.target.value)}
-            placeholder="-122.4194"
-            className={errors.longitude ? 'error' : ''}
-          />
-          {errors.longitude && <span className="error-message">{errors.longitude}</span>}
-        </div>
+              <div className="form-group">
+                <label htmlFor="longitude">
+                  <span className="label-text">Longitude</span>
+                  <span className="required">*</span>
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    id="longitude"
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                    placeholder="-74.0060"
+                    className={errors.longitude ? 'error' : ''}
+                  />
+                </div>
+                {errors.longitude && (
+                  <span className="error-message">⚠️ {errors.longitude}</span>
+                )}
+              </div>
+            </div>
 
-        <div className="form-group">
-          <label htmlFor="address">Address (Optional)</label>
-          <input
-            type="text"
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="San Francisco, CA"
-          />
-        </div>
+            <div className="form-group">
+              <label htmlFor="address-optional">
+                <span className="label-text">Label (Optional)</span>
+              </label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  id="address-optional"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Customer name or reference"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <button type="submit" className="btn-add">
+          <span className="btn-icon">➕</span>
           Add Stop
         </button>
       </form>
