@@ -46,7 +46,7 @@ function MapBoundsSetter({ stops }) {
   return null;
 }
 
-export default function RouteMap({ stops, optimizedRoute }) {
+export default function RouteMap({ stops, optimizedRoute, routeGeometry }) {
   const mapRef = useRef(null);
 
   // Default center (San Francisco)
@@ -62,8 +62,10 @@ export default function RouteMap({ stops, optimizedRoute }) {
     }
   }, [stops, optimizedRoute]);
 
-  // Determine which stops to display
-  const displayStops = optimizedRoute || stops || [];
+  // Determine which stops to display - only include stops with valid coordinates
+  const displayStops = (optimizedRoute || stops || []).filter(
+    (stop) => stop && typeof stop.latitude === 'number' && typeof stop.longitude === 'number'
+  );
 
   // Calculate center based on stops
   const mapCenter =
@@ -72,10 +74,21 @@ export default function RouteMap({ stops, optimizedRoute }) {
       : defaultCenter;
 
   // Create polyline coordinates for the route
-  const routeCoordinates =
-    optimizedRoute && optimizedRoute.length > 0
-      ? optimizedRoute.map((stop) => [stop.latitude, stop.longitude])
-      : [];
+  // Use OSRM route geometry if available (road-following), otherwise draw straight lines
+  const routeCoordinates = (() => {
+    // If we have route geometry from OSRM, use it (follows roads)
+    if (routeGeometry && routeGeometry.coordinates && routeGeometry.coordinates.length > 0) {
+      // GeoJSON format is [longitude, latitude], Leaflet uses [latitude, longitude]
+      return routeGeometry.coordinates.map(coord => [coord[1], coord[0]]);
+    }
+
+    // Fallback: draw straight lines between stops
+    if (optimizedRoute && optimizedRoute.length > 0) {
+      return optimizedRoute.map((stop) => [stop.latitude, stop.longitude]);
+    }
+
+    return [];
+  })();
 
   return (
     <div className="route-map">
@@ -126,9 +139,11 @@ export default function RouteMap({ stops, optimizedRoute }) {
                   {stop.address && (
                     <div className="popup-address">{stop.address}</div>
                   )}
-                  <div className="popup-coords">
-                    {stop.latitude.toFixed(4)}, {stop.longitude.toFixed(4)}
-                  </div>
+                  {typeof stop.latitude === 'number' && typeof stop.longitude === 'number' && (
+                    <div className="popup-coords">
+                      {stop.latitude.toFixed(4)}, {stop.longitude.toFixed(4)}
+                    </div>
+                  )}
                 </div>
               </Popup>
             </Marker>

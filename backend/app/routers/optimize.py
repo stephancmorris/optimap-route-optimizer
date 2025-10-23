@@ -190,9 +190,14 @@ async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
                 detail=error.model_dump()
             )
 
-        # Validate coordinates
+        # Validate coordinates (only for stops that have them - addresses will be geocoded later)
         for i, stop in enumerate(request.stops):
-            if not (-90 <= stop.latitude <= 90):
+            # Skip validation for stops that will be geocoded
+            if stop.needs_geocoding():
+                continue
+
+            # Validate latitude if present
+            if stop.latitude is not None and not (-90 <= stop.latitude <= 90):
                 error = create_error_response(
                     code=ErrorCode.INVALID_COORDINATES,
                     message=f"Invalid latitude at stop {i}: {stop.latitude}",
@@ -206,7 +211,9 @@ async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=error.model_dump()
                 )
-            if not (-180 <= stop.longitude <= 180):
+
+            # Validate longitude if present
+            if stop.longitude is not None and not (-180 <= stop.longitude <= 180):
                 error = create_error_response(
                     code=ErrorCode.INVALID_COORDINATES,
                     message=f"Invalid longitude at stop {i}: {stop.longitude}",
@@ -400,6 +407,20 @@ async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
         # Step 6: Build optimized route with locations
         optimized_route = [request.stops[i] for i in optimized_route_indices]
 
+        # Step 7: Get route geometry from OSRM (road-following path)
+        route_geometry = None
+        try:
+            async with OSRMClient(
+                base_url=settings.osrm_base_url,
+                timeout_seconds=settings.osrm_timeout_seconds
+            ) as osrm_client:
+                route_data = await osrm_client.get_route(optimized_route)
+                route_geometry = route_data.get("geometry")
+                logger.info("Successfully fetched route geometry from OSRM")
+        except Exception as e:
+            # Don't fail the entire request if route geometry fetch fails
+            logger.warning(f"Failed to fetch route geometry: {e}")
+
         logger.info(
             f"Optimization complete: {distance_saved:.0f}m saved ({distance_saved_pct:.1f}%), "
             f"{time_saved:.0f}s saved ({time_saved_pct:.1f}%)"
@@ -418,7 +439,8 @@ async def optimize_route(request: OptimizationRequest) -> OptimizationResponse:
             distance_saved_meters=distance_saved,
             time_saved_seconds=time_saved,
             distance_saved_percentage=distance_saved_pct,
-            time_saved_percentage=time_saved_pct
+            time_saved_percentage=time_saved_pct,
+            route_geometry=route_geometry
         )
 
     except HTTPException:

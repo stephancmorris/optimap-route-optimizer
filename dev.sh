@@ -51,9 +51,9 @@ fi
 echo ""
 echo -e "${GREEN}Starting development servers...${NC}"
 echo ""
-echo -e "${BLUE}📡 Backend:${NC}  http://localhost:8000"
+echo -e "${BLUE}📡 Backend:${NC}  http://localhost:8001"
 echo -e "${BLUE}🌐 Frontend:${NC} http://localhost:5173"
-echo -e "${BLUE}📚 API Docs:${NC} http://localhost:8000/docs"
+echo -e "${BLUE}📚 API Docs:${NC} http://localhost:8001/docs"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all servers${NC}"
 echo ""
@@ -71,7 +71,7 @@ trap cleanup SIGINT SIGTERM
 
 # Start backend server
 cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload &
 BACKEND_PID=$!
 cd ..
 

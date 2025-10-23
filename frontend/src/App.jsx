@@ -69,6 +69,7 @@ function App() {
           <RouteMap
             stops={stops}
             optimizedRoute={optimizationResult?.optimized_route}
+            routeGeometry={optimizationResult?.route_geometry}
           />
         </div>
       </main>

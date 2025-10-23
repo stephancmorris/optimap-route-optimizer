@@ -167,6 +167,10 @@ class OptimizationResponse(BaseModel):
         ...,
         description="Percentage of time saved"
     )
+    route_geometry: Optional[dict] = Field(
+        None,
+        description="GeoJSON geometry of the optimized route following roads"
+    )
 
     class Config:
         json_schema_extra = {
