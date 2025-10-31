@@ -15,7 +15,7 @@ OptiMap demonstrates critical product engineering capabilities: translating comp
 
 ## 🚀 Key Features
 
-### Core Capabilities
+### Optimap Core Capabilities
 
 * **🎯 VRP Solver** - Implements the **Vehicle Routing Problem (VRP)** using **Google OR-Tools** to determine the optimal sequence of stops for delivery vehicles
 * **🌍 Real-World Routing** - Integrates with **OSRM** (Open Source Routing Machine) for accurate, road-based travel times and distances (respects one-way streets, turn restrictions)
