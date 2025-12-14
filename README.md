@@ -11,7 +11,6 @@
 
 OptiMap demonstrates critical product engineering capabilities: translating complex algorithmic problems into tangible, user-friendly, and cost-saving solutions. Built on a modern **decoupled microservices architecture** using FastAPI and React.
 
-![OptiMap Demo](docs/images/optimap-demo.png)
 
 ## 🚀 Key Features
 
