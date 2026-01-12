@@ -73,6 +73,4 @@ graph TD
 7. **Response** - Backend returns optimized route with savings metrics and geocoded coordinates
 8. **Visualization** - Frontend displays route on map with metrics dashboard
 
-[⬆ Back to Top](#-optimap-last-mile-route-optimization-platform)
-
 </div>
