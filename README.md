@@ -12,7 +12,7 @@
 OptiMap demonstrates critical product engineering capabilities: translating complex algorithmic problems into tangible, user-friendly, and cost-saving solutions. Built on a modern **decoupled microservices architecture** using FastAPI and React.
 
 
-## 🚀 Key Features
+## Key Features
 
 ### Optimap Core Capabilities
 
@@ -23,9 +23,6 @@ OptiMap demonstrates critical product engineering capabilities: translating comp
 * **🗺️ Interactive Visualization** - Modern React frontend with **Leaflet/Mapbox** displaying optimized routes on interactive maps
 * **⚡ High Performance** - Optimizes routes for up to 100 stops in under 5 seconds
 * **🔒 Production Ready** - Comprehensive error handling, logging, monitoring, and 90%+ test coverage
-
-### Recently Added Features (As of Oct 27th)
-
 * **🏠 Address-First Input** - Modern UI with toggle between address and coordinate input modes
 * **✨ Modern Design System** - Gradients, animations, shadows, and micro-interactions throughout
 * **🎨 Geocoding Indicators** - Visual badges showing which locations were auto-geocoded vs. manual
@@ -37,22 +34,6 @@ OptiMap demonstrates critical product engineering capabilities: translating comp
 * **🐳 Docker Support** - Containerized deployment with Docker Compose
 * **🛡️ Error Handling** - Graceful handling of timeouts, invalid inputs, and service failures
 * **🔍 CORS Configuration** - Secure cross-origin resource sharing for frontend/backend communication
-
-## 🛠️ Technology Stack
-
-| Component | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Backend Framework** | **FastAPI** | High-performance async Python web framework |
-| **Optimization Engine** | **Google OR-Tools** | Constraint programming solver for VRP/TSP |
-| **Geocoding Service** | **Nominatim** | OpenStreetMap address geocoding (supports Google/Mapbox) |
-| **Frontend Framework** | **React 19** | Component-based UI library with modern hooks |
-| **Mapping Library** | **React-Leaflet / Mapbox** | Interactive map visualization |
-| **Routing Service** | **OSRM** | Real-world distance/time calculations |
-| **Containerization** | **Docker & Docker Compose** | Reproducible deployment |
-| **Testing** | **Pytest** | Comprehensive test suite (85+ tests) |
-| **API Documentation** | **OpenAPI / Swagger** | Auto-generated API docs |
-| **Logging** | **Structured Logging** | Request tracing and monitoring |
-| **Caching** | **cachetools** | TTL-based geocoding cache |
 
 ## 📐 Architecture
 
@@ -111,11 +92,11 @@ docker compose up --build
 ```
 
 **Access the application:**
-- 🌐 **Frontend:** http://localhost:3000
-- 📡 **Backend API:** http://localhost:8000
-- 📚 **API Documentation (Swagger):** http://localhost:8000/docs
-- 📖 **API Documentation (ReDoc):** http://localhost:8000/redoc
-- 🏥 **Health Check:** http://localhost:8000/health
+-  **Frontend:** http://localhost:3000
+-  **Backend API:** http://localhost:8000
+-  **API Documentation (Swagger):** http://localhost:8000/docs
+-  **API Documentation (ReDoc):** http://localhost:8000/redoc
+-  **Health Check:** http://localhost:8000/health
 
 **Docker commands:**
 ```bash
@@ -141,19 +122,6 @@ chmod +x dev.sh
 ./dev.sh
 ```
 
-This automatically:
-- ✅ Creates Python virtual environment
-- ✅ Installs backend dependencies
-- ✅ Installs frontend dependencies
-- ✅ Starts both servers concurrently
-- ✅ Handles graceful shutdown with Ctrl+C
-
-**Access the application:**
-- 🌐 **Frontend:** http://localhost:5173 (Vite dev server)
-- 📡 **Backend API:** http://localhost:8000
-- 📚 **API Documentation:** http://localhost:8000/docs
-
-### 🔧 Option 3: Manual Setup
 
 <details>
 <summary><strong>Click to expand manual setup instructions</strong></summary>
